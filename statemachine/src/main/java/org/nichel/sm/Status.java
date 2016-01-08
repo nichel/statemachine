@@ -3,6 +3,7 @@ package org.nichel.sm;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.os.Bundle;
 
 import org.nichel.sm.annotation.OnEnterStatus;
 import org.nichel.sm.annotation.OnExitStatus;
@@ -10,6 +11,8 @@ import org.nichel.sm.annotation.OnExitStatus;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+
+import timber.log.Timber;
 
 public class Status {
     private final String label;
@@ -37,12 +40,12 @@ public class Status {
         this.notification = notification;
     }
 
-    void enter(final StateMachine stateMachine) throws IllegalAccessException, InvocationTargetException, InstantiationException {
+    void enter(final StateMachine stateMachine, final Bundle bundle) throws IllegalAccessException, InvocationTargetException, InstantiationException {
         if (notification != null) {
             notificationManager.notify(NOTIFICATION_ID, notification);
         }
 
-        onEnterStatus(stateMachine, this);
+        onEnterStatus(stateMachine, this, bundle);
     }
 
     void exit(final StateMachine stateMachine) throws IllegalAccessException, InvocationTargetException, InstantiationException {
@@ -53,14 +56,20 @@ public class Status {
         onExitStatus(stateMachine, this);
     }
 
-    private void onEnterStatus(final StateMachine stateMachine, final Status status) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+    private void onEnterStatus(final StateMachine stateMachine, final Status status, final Bundle bundle) throws IllegalAccessException, InstantiationException, InvocationTargetException {
         for (final Method method : methods) {
             if (method.isAnnotationPresent(OnEnterStatus.class)) {
                 final OnEnterStatus annotation = method.getAnnotation(OnEnterStatus.class);
 
                 for (final String label : annotation.value()) {
                     if (label.equals(status.label)) {
-                        method.invoke(target, stateMachine, status);
+                        final int params = method.getGenericParameterTypes().length;
+
+                        if (params == 2) {
+                            method.invoke(target, stateMachine, status);
+                        } else if (params == 3) {
+                            method.invoke(target, stateMachine, status, bundle);
+                        }
                     }
                 }
             }

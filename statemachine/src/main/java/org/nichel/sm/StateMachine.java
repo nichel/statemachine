@@ -1,5 +1,6 @@
 package org.nichel.sm;
 
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.ArrayMap;
@@ -59,7 +60,7 @@ public class StateMachine {
                 public void run() {
                     try {
                         currentStatus = state;
-                        currentStatus.enter(StateMachine.this);
+                        currentStatus.enter(StateMachine.this, null);
 
                         onStatusChanged(currentStatus);
                     } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
@@ -70,7 +71,7 @@ public class StateMachine {
         }
     }
 
-    public void setState(final Status status) {
+    private void setState(final Status status, final Bundle bundle) {
         final Pair<String, String> key = getKey(currentStatus, status);
         final Action action = actions.get(key);
 
@@ -81,7 +82,7 @@ public class StateMachine {
                     try {
                         currentStatus.exit(StateMachine.this);
                         currentStatus = action.perform(StateMachine.this);
-                        currentStatus.enter(StateMachine.this);
+                        currentStatus.enter(StateMachine.this, bundle);
 
                         onStatusChanged(currentStatus);
                     } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
@@ -92,10 +93,19 @@ public class StateMachine {
         }
     }
 
+    public void setState(final String label, final Bundle bundle) {
+        for (final Status state : states) {
+            if (state.getLabel().equals(label)) {
+                setState(state, bundle);
+                break;
+            }
+        }
+    }
+
     public void setState(final String label) {
         for (final Status state : states) {
             if (state.getLabel().equals(label)) {
-                setState(state);
+                setState(state, null);
                 break;
             }
         }
@@ -113,7 +123,6 @@ public class StateMachine {
     private void onStatusChanged(final Status status) throws IllegalAccessException, InstantiationException, InvocationTargetException {
         for (final Method method : methods) {
             if (method.isAnnotationPresent(OnStatusChanged.class)) {
-                final OnStatusChanged annotation = method.getAnnotation(OnStatusChanged.class);
                 method.invoke(target, this, status);
             }
         }

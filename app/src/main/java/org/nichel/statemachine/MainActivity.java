@@ -29,8 +29,8 @@ public class MainActivity extends AppCompatActivity {
         final Status statusOff = new Status(this, this, STATUS_OFF);
 
         sm = new StateMachine(this, "MAIN");
-        sm.addAction(statusOn, statusOff);
-        sm.addAction(statusOff, statusOn);
+        sm.addAction(statusOn, statusOff); // ON -> OFF
+        sm.addAction(statusOff, statusOn); // OFF -> ON
         sm.setInitialState(statusOff);
 
         super.onCreate(savedInstanceState);
