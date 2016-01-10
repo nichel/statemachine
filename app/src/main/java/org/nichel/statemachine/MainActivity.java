@@ -25,13 +25,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         Timber.i("onCreate");
 
-        final Status statusOn = new Status(this, this, STATUS_ON);
-        final Status statusOff = new Status(this, this, STATUS_OFF);
+        final Status statusOn = new Status(this, STATUS_ON);
+        final Status statusOff = new Status(this, STATUS_OFF);
 
-        sm = new StateMachine(this, "MAIN");
+        sm = new StateMachine(this);
         sm.addAction(statusOn, statusOff); // ON -> OFF
         sm.addAction(statusOff, statusOn); // OFF -> ON
-        sm.setInitialState(statusOff);
+        sm.setInitialStatus(statusOff);
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onClick() {
         Timber.i("onClick");
 
-        sm.setState(STATUS_ON);
+        sm.setStatus(STATUS_ON, 13);
     }
 
     @OnEnterStatus({STATUS_ON, STATUS_OFF})
@@ -52,10 +52,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @OnEnterStatus(STATUS_ON)
-    public void onEnterOn(final StateMachine stateMachine, final Status status) {
+    public void onEnterOn(final StateMachine stateMachine, final Status status, final int param) {
         Timber.i("enter: %s - [%s]", stateMachine, status);
+        Timber.d("param: %d", param);
 
-        sm.setState(STATUS_OFF);
+        sm.setStatus(STATUS_OFF);
     }
 
     @OnEnterStatus(STATUS_OFF)
